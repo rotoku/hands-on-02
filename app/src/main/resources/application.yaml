@@ -1,0 +1,35 @@
+server:
+  port: 8092
+
+spring:
+  application:
+    name: "handson02"
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      cotacaoSeguroService:
+        registerHealthIndicator: true
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10 # Número de chamadas para considerar para calcular a taxa de falha
+        failureRateThreshold: 50 # Porcentagem de falhas para abrir o circuito (50%)
+        waitDurationInOpenState: 10s # Tempo que o circuito permanece aberto antes de tentar fechar (10 segundos)
+        permittedNumberOfCallsInHalfOpenState: 3 # Número de chamadas permitidas no estado semi-aberto
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        ignoreExceptions: # Exceções que não devem contar como falha
+          - br.com.kumabe.handson02.exceptions.ParametroInvalidoException
+        recordExceptions: # Exceções que devem contar como falha (padrão: todas as RuntimeExceptions)
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - br.com.kumabe.handson02.exceptions.ServicoExternoIndisponivelException
+  retry:
+    instances:
+      cotacaoSeguroService:
+        maxAttempts: 3 # Número máximo de tentativas (1 inicial + 2 retries)
+        waitDuration: 2s # Tempo de espera entre as tentativas (2 segundos)
+        retryExceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - br.com.kumabe.handson02.exceptions.ServicoExternoIndisponivelException
+        ignoreExceptions:
+          - br.com.kumabe.handson02.exceptions.ParametroInvalidoException
